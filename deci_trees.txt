@@ -1,0 +1,58 @@
+##Build a decision tree classifier compare its performance with ensemble 
+##techniques like random forest, bagging, boosting and voting. Demonstrate it with different 
+##decision trees.
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, BaggingClassifier,GradientBoostingClassifier,AdaBoostClassifier,VotingClassifier
+from sklearn import datasets # import inbuild datasets
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score
+from sklearn.model_selection import cross_val_score, cross_val_predict
+iris = datasets.load_iris()
+
+
+X = iris.data
+y = iris.target
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+dtc = DecisionTreeClassifier()
+rfc = RandomForestClassifier(n_estimators=100)
+bc = BaggingClassifier (n_estimators=100, bootstrap=True, n_jobs=-1, random_state=42)
+gbc = GradientBoostingClassifier(n_estimators=100)
+abc = AdaBoostClassifier(n_estimators=100, learning_rate=0.03)
+vot = VotingClassifier(estimators = [('rfc', rfc), ('gbc', gbc)], voting = 'soft')
+
+clfs = {
+ 'DT': dtc,
+ 'RF': rfc,
+ 'BGC': bc,
+ 'GBC': gbc,
+ 'ABC': abc,
+ 'VOTING': vot
+}
+
+def train_classifier(clf, X_train, X_test, y_train, y_test):
+ clf.fit(X_train, y_train)
+ y_pred = clf.predict(X_test)
+ score = clf.score(X_train, y_train)
+ accuracy = accuracy_score(y_test, y_pred)
+ precision = precision_score(y_test, y_pred, average='micro')
+ return accuracy, precision, score
+
+accuracy_scores = []
+precision_scores = []
+scores = []
+for name, clf in clfs.items():
+ acc, pre, score = train_classifier(clf, X_train, X_test, y_train, y_test)
+ accuracy_scores.append(acc)
+ precision_scores.append(pre)
+ scores.append(score)
+import pandas as pd
+df = pd.DataFrame({'Algorithm': clfs.keys(),'Score': scores, 'Accuracy': accuracy_scores, 'Precision': precision_scores})
+
+
+
+from sklearn.tree import plot_tree
+import matplotlib.pyplot as plt
+plt.figure(figsize=(50,50))
+plot_tree(classifier, filled=True, feature_names=['Age', 'Estimated Salary'], class_names=['Not Purchased', 'Purchased'])
+plt.show()
